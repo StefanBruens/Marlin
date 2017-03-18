@@ -61,7 +61,8 @@ HARDWARE_MOTHERBOARD ?= 11
 # Arduino source install directory, and version number
 # On most linuxes this will be /usr/share/arduino
 ARDUINO_INSTALL_DIR  ?= ${HOME}/Arduino
-ARDUINO_VERSION      ?= 106
+PACKAGES_INSTALL_DIR ?= ${HOME}/.arduino15/packages
+ARDUINO_VERSION      ?= 106080
 
 # You can optionally set a path to the avr-gcc tools. Requires a trailing slash. (ex: /usr/local/avr-gcc/bin)
 AVR_TOOLS_PATH ?=
@@ -255,6 +256,7 @@ TARGET = $(notdir $(CURDIR))
 # directory is added here
 
 VPATH = .
+VPATH += U8glib
 VPATH += $(BUILD_DIR)
 VPATH += $(ARDUINO_INSTALL_DIR)/hardware/arduino/avr/cores/arduino
 
@@ -276,7 +278,7 @@ HARDWARE_SUB_VARIANT ?= mega
 VPATH += $(ARDUINO_INSTALL_DIR)/hardware/arduino/avr/variants/$(HARDWARE_SUB_VARIANT)
 else
 ifeq ($(HARDWARE_VARIANT), Sanguino)
-VPATH += $(HARDWARE_DIR)/marlin/avr/variants/sanguino
+VPATH += $(PACKAGES_INSTALL_DIR)/Sanguino/hardware/avr/1.0.2/variants/sanguino
 else
 HARDWARE_SUB_VARIANT ?= standard
 VPATH += $(HARDWARE_DIR)/$(HARDWARE_VARIANT)/variants/$(HARDWARE_SUB_VARIANT)
@@ -303,6 +305,8 @@ else
 SRC += twi.c
 CXXSRC += Wire.cpp LiquidTWI2.cpp
 endif
+SRC += ${wildcard U8glib/clib/*.c}
+CXXSRC += ${wildcard U8glib/*.cpp}
 
 ifeq ($(WIRE), 1)
 SRC += twi.c
@@ -372,7 +376,7 @@ endif
 CEXTRA = -fno-use-cxa-atexit -fno-threadsafe-statics
 
 CFLAGS := $(CDEBUG) $(CDEFS) $(CINCS) -O$(OPT) $(CWARN) $(CEXTRA) $(CTUNING) $(CSTANDARD)
-CXXFLAGS :=         $(CDEFS) $(CINCS) -O$(OPT) -Wall    $(CEXTRA) $(CTUNING) $(CXXSTANDARD)
+CXXFLAGS := $(CDEBUG) $(CDEFS) $(CINCS) -O$(OPT) -Wall    $(CEXTRA) $(CTUNING) $(CXXSTANDARD)
 #ASFLAGS = -Wa,-adhlns=$(<:.S=.lst),-gstabs
 LDFLAGS = -lm
 
@@ -420,6 +424,7 @@ build: $(BUILD_DIR) elf hex
 # Creates the object directory
 $(BUILD_DIR):
 	$P mkdir -p $(BUILD_DIR)
+	$P mkdir -p $(BUILD_DIR)/U8glib/clib
 
 elf: $(BUILD_DIR)/$(TARGET).elf
 hex: $(BUILD_DIR)/$(TARGET).hex
